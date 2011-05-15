@@ -10,9 +10,9 @@ import (
 	_ "http/pprof"
 )
 
-func InstallPprof() {
+func InstallPProfHTTP(bind string) {
 	go func() {
-		err := http.ListenAndServe(":5500", nil)
+		err := http.ListenAndServe(bind, nil)
 		if err != nil {
 			log.Fatal("ListenAndServe: ", err.String())
 		}
