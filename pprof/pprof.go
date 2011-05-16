@@ -25,6 +25,8 @@ func StartHTTP(bind string) {
 }
 
 func StartLogging(filename string, interval int64) {
+	t := time.LocalTime()
+	filename = filename + "-" + strconv.Itoa64(t.Year) + strconv.Itoa(t.Month) + strconv.Itoa(t.Day)
 	go func() {
 		for k := 0; ; k++ {
 			time.Sleep(interval)
