@@ -5,16 +5,40 @@
 package pprof
 
 import (
+	"bytes"
+	"io/ioutil"
 	"log"
 	"http"
 	_ "http/pprof"
+	"runtime/pprof"
+	"strconv"
+	"time"
 )
 
-func InstallPProfHTTP(bind string) {
+func StartHTTP(bind string) {
 	go func() {
 		err := http.ListenAndServe(bind, nil)
 		if err != nil {
 			log.Fatal("ListenAndServe: ", err.String())
+		}
+	}()
+}
+
+func StartLogging(filename string, interval int64) {
+	go func() {
+		for k := 0; ; k++ {
+			time.Sleep(interval)
+			var w bytes.Buffer
+			err := pprof.WriteHeapProfile(&w)
+			if err != nil {
+				log.Printf("preparing pprof: %s\n", err)
+				break
+			}
+			err = ioutil.WriteFile(filename + "-" + strconv.Itoa(k), w.Bytes(), 0666)
+			if err != nil {
+				log.Printf("writing pprof to file: %s\n", err)
+				break
+			}
 		}
 	}()
 }
