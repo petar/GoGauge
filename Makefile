@@ -21,6 +21,7 @@ all: install
 
 DIRS=\
 	pprof\
+	unclosed\
 
 TEST=\
 	$(filter-out $(NOTEST),$(DIRS))
