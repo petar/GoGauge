@@ -87,6 +87,20 @@ func (t *Context) Path() []*Context {
 	return r
 }
 
+func (t *Context) GetRoot() *Context {
+	r := t
+	for r != nil {
+		r.Lock()
+		p := r.parent
+		r.Unlock()
+		if p == nil {
+			return r
+		}
+		r = p
+	}
+	return nil
+}
+
 func (t *Context) NamePath() []string {
 	p := t.Path()
 	q := make([]string, len(p))
