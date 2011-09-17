@@ -87,7 +87,7 @@ func (t *Context) Path() []*Context {
 	return r
 }
 
-func (t *Context) StringPath() []string {
+func (t *Context) NamePath() []string {
 	p := t.Path()
 	q := make([]string, len(p))
 	for i, c := range p {
