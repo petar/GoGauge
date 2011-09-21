@@ -4,8 +4,8 @@
 
 include $(GOROOT)/src/Make.inc
 
-TARG=github.com/petar/GoGauge/tag
+TARG=github.com/petar/GoGauge/dyna
 GOFILES=\
-	tag.go\
+	dyna.go\
 
 include $(GOROOT)/src/Make.pkg

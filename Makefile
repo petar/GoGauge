@@ -23,7 +23,7 @@ DIRS=\
 	pprof\
 	unclosed\
 	context\
-	tag\
+	dyna\
 
 TEST=\
 	$(filter-out $(NOTEST),$(DIRS))
