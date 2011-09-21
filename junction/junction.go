@@ -4,106 +4,166 @@
 
 package junction
 
-import "sync"
+import (
+	"hash"
+	"hash/fnv"
+	"sync"
+)
 
-func Select(literal string, selected bool) {
-	_omega.fetchLiteral(literal).Select(selected)
+// TODO: add negated literals
+
+// Term is a conjunction of literals
+type Term []string
+
+func (t Term) Get(i int) string {
+	return t[i]
 }
 
-func SetAttr(literal string, attr string, value interface{}) {
-	_omega.fetchLiteral(literal).SetAttr(attr, value)
+func (t Term) Strings() []string {
+	return []string(t)
 }
 
-func UnsetAttr(literal string, attr string) {
-	_omega.fetchLiteral(literal).UnsetAttr(attr)
+func (t Term) Selected() bool {
+	for _, l := range t {
+		if !IsSelected(l) {
+			return false
+		}
+	}
+	return true
 }
 
-type omega struct {
+func uint64Bytes(s []byte) uint64 {
+	var x uint64
+	for i := 0; i < 8; i++ {
+		x |= uint64(s[i]) << uint(8*i)
+	}
+	return x
+}
+
+func (t Term) Hash() int64 {
+	x.hlock.Lock()
+	defer x.hlock.Unlock()
+	x.hash.Reset()
+	var h uint64
+	for _, s := range t {
+		x.hash.Write([]byte(s))
+		h ^= uint64Bytes(x.hash.Sum())
+	}
+	return int64(h)
+}
+
+// x keeps track of all literals, the current selection, and term attributes
+var x struct {
 	sync.Mutex
-	literals map[string]*Literal
+	selected map[string]int
+	attr     map[int64]*attrSet
+	hlock    sync.Mutex
+	hash     hash.Hash
 }
-
-var _omega omega
 
 func init() {
-	_omega.Init()
+	x.selected = make(map[string]int)
+	x.attr = make(map[int64]*attrSet)
+	x.hash = fnv.New64a()
 }
 
-func (t *omega) Init() {
-	t.literals = make(map[string]*Literal)
+// Set the select status of a literal
+
+func Select(literal string) {
+	x.Lock()
+	defer x.Unlock()
+	x.selected[literal] = 1, true
 }
 
-func (t *omega) fetchLiteral(literal string) *Literal {
-	t.Lock()
-	defer t.Unlock()
-	l, ok := t.literals[literal]
-	if ok {
-		return l
+func Unselect(literal string) {
+	x.Lock()
+	defer x.Unlock()
+	x.selected[literal] = 0, false
+}
+
+func IsSelected(literal string) bool {
+	x.Lock()
+	defer x.Unlock()
+	_, ok := x.selected[literal]
+	return ok
+}
+
+func SetAttr(term Term, attr string, value interface{}) {
+	if value == nil {
+		UnsetAttr(term, attr)
 	}
-	l = newLiteral(literal)
-	t.literals[literal] = l
-	return l
+	x.Lock()
+	defer x.Unlock()
+	h := term.Hash()
+	a, ok := x.attr[h]
+	if !ok {
+		a = newAttrSet()
+		x.attr[h] = a
+	}
+	a.SetAttr(attr, value)
 }
 
-func (t *omega) selectLiteral(literal string, selected bool) {
-	t.Lock()
-	l := t.literals[literal]
-	t.Unlock()
-	l.Select(selected)
+func UnsetAttr(term Term, attr string) {
+	x.Lock()
+	defer x.Unlock()
+	h := term.Hash()
+	a, ok := x.attr[h]
+	if !ok {
+		return
+	}
+	a.UnsetAttr(attr)
+	if a.Len() == 0 {
+		x.attr[h] = nil, false
+	}
 }
 
-type Literal struct {
+func GetAttr(term Term, attr string) interface{} {
+	x.Lock()
+	defer x.Unlock()
+	h := term.Hash()
+	a, ok := x.attr[h]
+	if !ok {
+		return nil
+	}
+	return a.GetAttr(attr)
+}
+
+// attrSet is a set of attributes of the form (attrName, value)
+type attrSet struct {
 	sync.Mutex
-	literal  string
-	selected bool
-	attr     map[string]interface{}
+	attr map[string]interface{}
 }
 
-func newLiteral(name string) *Literal {
-	return &Literal{
-		literal:  name,
-		selected: true,
-		attr:     make(map[string]interface{}),
+func newAttrSet() *attrSet {
+	return &attrSet{
+		attr: make(map[string]interface{}),
 	}
 }
 
-func (t *Literal) SetAttr(attr string, value interface{}) {
+func (t *attrSet) Len() int {
 	t.Lock()
 	defer t.Unlock()
-	t.attr[attr] = value
+	return len(t.attr)
 }
 
-func (t *Literal) UnsetAttr(attr string) {
+func (t *attrSet) SetAttr(attr string, value interface{}) {
+	t.Lock()
+	defer t.Unlock()
+	if value == nil {
+		t.attr[attr] = nil, false
+	} else {
+		t.attr[attr] = value
+	}
+}
+
+func (t *attrSet) UnsetAttr(attr string) {
 	t.Lock()
 	defer t.Unlock()
 	t.attr[attr] = nil, false
 }
 
-func (t *Literal) GetAttr(attr string) interface{} {
+func (t *attrSet) GetAttr(attr string) interface{} {
 	t.Lock()
 	defer t.Unlock()
 	return t.attr[attr]
-}
-
-func (t *Literal) Select(value bool) {
-	t.Lock()
-	defer t.Unlock()
-	t.selected = value
-}
-
-func (t *Literal) Selected() bool {
-	t.Lock()
-	defer t.Unlock()
-	return t.selected
-}
-
-type Clause []string
-
-func (t Clause) Selected() bool {
-	for _, l := range t {
-		if !_omega.fetchLiteral(l).Selected() {
-			return false
-		}
-	}
-	return true
 }
