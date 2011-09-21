@@ -23,7 +23,7 @@ DIRS=\
 	pprof\
 	unclosed\
 	context\
-	junction\
+	tag\
 
 TEST=\
 	$(filter-out $(NOTEST),$(DIRS))
