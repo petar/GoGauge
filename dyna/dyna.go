@@ -15,6 +15,10 @@ import (
 // Term is a conjunction of literals
 type Term []string
 
+func (t Term) Len() int {
+	return len(t)
+}
+
 func (t Term) Get(i int) string {
 	return t[i]
 }
@@ -25,7 +29,7 @@ func (t Term) Strings() []string {
 
 func (t Term) Selected() bool {
 	for _, l := range t {
-		if !IsSelected(l) {
+		if !Selected(l) {
 			return false
 		}
 	}
@@ -81,7 +85,7 @@ func Unselect(literal string) {
 	x.selected[literal] = 0, false
 }
 
-func IsSelected(literal string) bool {
+func Selected(literal string) bool {
 	x.Lock()
 	defer x.Unlock()
 	_, ok := x.selected[literal]
