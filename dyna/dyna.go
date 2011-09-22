@@ -73,23 +73,32 @@ func init() {
 
 // Set the select status of a literal
 
-func Select(literal string) {
+func Select(literals ...string) {
 	x.Lock()
 	defer x.Unlock()
-	x.selected[literal] = 1, true
+	for _, literal := range literals {
+		x.selected[literal] = 1, true
+	}
 }
 
-func Unselect(literal string) {
+func Unselect(literals ...string) {
 	x.Lock()
 	defer x.Unlock()
-	x.selected[literal] = 0, false
+	for _, literal := range literals {
+		x.selected[literal] = 0, false
+	}
 }
 
-func Selected(literal string) bool {
+func Selected(literals ...string) bool {
 	x.Lock()
 	defer x.Unlock()
-	_, ok := x.selected[literal]
-	return ok
+	for _, literal := range literals {
+		_, ok := x.selected[literal]
+		if !ok {
+			return false
+		}
+	}
+	return true
 }
 
 func SetAttr(term T, attr string, value interface{}) {
