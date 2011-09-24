@@ -12,30 +12,6 @@ import (
 
 // TODO: add negated literals
 
-// T is a conjunction of literals
-type T []string
-
-func (t T) Len() int {
-	return len(t)
-}
-
-func (t T) Get(i int) string {
-	return t[i]
-}
-
-func (t T) Strings() []string {
-	return []string(t)
-}
-
-func (t T) Selected() bool {
-	for _, l := range t {
-		if !Selected(l) {
-			return false
-		}
-	}
-	return true
-}
-
 func uint64Bytes(s []byte) uint64 {
 	var x uint64
 	for i := 0; i < 8; i++ {
@@ -44,12 +20,12 @@ func uint64Bytes(s []byte) uint64 {
 	return x
 }
 
-func (t T) Hash() int64 {
+func hashStringSlice(ss []string) int64 {
 	x.hlock.Lock()
 	defer x.hlock.Unlock()
 	x.hash.Reset()
 	var h uint64
-	for _, s := range t {
+	for _, s := range ss {
 		x.hash.Write([]byte(s))
 		h ^= uint64Bytes(x.hash.Sum())
 	}
@@ -101,13 +77,13 @@ func Selected(literals ...string) bool {
 	return true
 }
 
-func SetAttr(term T, attr string, value interface{}) {
+func SetAttr(term []string, attr string, value interface{}) {
 	if value == nil {
 		UnsetAttr(term, attr)
 	}
 	x.Lock()
 	defer x.Unlock()
-	h := term.Hash()
+	h := hashStringSlice(term)
 	a, ok := x.attr[h]
 	if !ok {
 		a = newAttrSet()
@@ -116,10 +92,10 @@ func SetAttr(term T, attr string, value interface{}) {
 	a.SetAttr(attr, value)
 }
 
-func UnsetAttr(term T, attr string) {
+func UnsetAttr(term []string, attr string) {
 	x.Lock()
 	defer x.Unlock()
-	h := term.Hash()
+	h := hashStringSlice(term)
 	a, ok := x.attr[h]
 	if !ok {
 		return
@@ -130,10 +106,10 @@ func UnsetAttr(term T, attr string) {
 	}
 }
 
-func GetAttr(term T, attr string) interface{} {
+func GetAttr(term []string, attr string) interface{} {
 	x.Lock()
 	defer x.Unlock()
-	h := term.Hash()
+	h := hashStringSlice(term)
 	a, ok := x.attr[h]
 	if !ok {
 		return nil
