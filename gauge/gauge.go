@@ -10,7 +10,9 @@ import (
 	"sync"
 )
 
-// TODO: add negated literals
+// TODO: 
+//	* add negated literals
+//	* global enable/disable switch
 
 func uint64Bytes(s []byte) uint64 {
 	var x uint64
@@ -77,6 +79,7 @@ func Selected(literals ...string) bool {
 	return true
 }
 
+// XXX: varargs for term
 func SetAttr(term []string, attr string, value interface{}) {
 	if value == nil {
 		UnsetAttr(term, attr)
@@ -92,6 +95,7 @@ func SetAttr(term []string, attr string, value interface{}) {
 	a.SetAttr(attr, value)
 }
 
+// XXX: varargs for term
 func UnsetAttr(term []string, attr string) {
 	x.Lock()
 	defer x.Unlock()
@@ -106,6 +110,7 @@ func UnsetAttr(term []string, attr string) {
 	}
 }
 
+// XXX: varargs for term
 func GetAttr(term []string, attr string) interface{} {
 	x.Lock()
 	defer x.Unlock()

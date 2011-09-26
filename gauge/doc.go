@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 /*
-	dyna provides a Dynamic Annotations facility for Go programs,
-	which is currently being used to implement selective logging.
+	gauge provides ..
 */
-package dyna
+package gauge
