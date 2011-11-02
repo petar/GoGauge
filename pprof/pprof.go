@@ -19,7 +19,7 @@ func StartHTTP(bind string) {
 	go func() {
 		err := http.ListenAndServe(bind, nil)
 		if err != nil {
-			log.Fatal("ListenAndServe: ", err.String())
+			log.Fatal("ListenAndServe: ", err.Error())
 		}
 	}()
 }

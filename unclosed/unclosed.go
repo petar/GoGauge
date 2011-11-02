@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"strconv"
 	"sync"
@@ -22,7 +21,7 @@ type readCloserTracker struct {
 	isClosed bool
 }
 
-func (t *readCloserTracker) Close() os.Error {
+func (t *readCloserTracker) Close() error {
 	t.lock.Lock()
 	if !t.isClosed {
 		t.isClosed = true
@@ -44,7 +43,7 @@ func NewReadCloserTracker(rc io.ReadCloser) io.ReadCloser {
 	}
 	Opened(name)
 	return &readCloserTracker{
-		ReadCloser: rc, 
+		ReadCloser: rc,
 		name:       name,
 		isClosed:   false,
 	}
@@ -52,7 +51,7 @@ func NewReadCloserTracker(rc io.ReadCloser) io.ReadCloser {
 
 var (
 	lk       sync.Mutex
-	unclosed map[string]int = make(map[string]int)	// Maps name to number of opens
+	unclosed map[string]int = make(map[string]int) // Maps name to number of opens
 )
 
 func Opened(name string) {
@@ -72,9 +71,9 @@ func Closed(name string) {
 		panic("open/close mismatch")
 	}
 	if n == 1 {
-		unclosed[name] = 0, false
+		delete(unclosed, name)
 	} else {
-		unclosed[name] = n-1
+		unclosed[name] = n - 1
 	}
 }
 
