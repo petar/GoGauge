@@ -55,7 +55,7 @@ func Select(literals ...string) {
 	x.Lock()
 	defer x.Unlock()
 	for _, literal := range literals {
-		x.selected[literal] = 1, true
+		x.selected[literal] = 1
 	}
 }
 
@@ -63,7 +63,7 @@ func Unselect(literals ...string) {
 	x.Lock()
 	defer x.Unlock()
 	for _, literal := range literals {
-		x.selected[literal] = 0, false
+		delete(x.selected, literal)
 	}
 }
 
@@ -106,7 +106,7 @@ func UnsetAttr(term []string, attr string) {
 	}
 	a.UnsetAttr(attr)
 	if a.Len() == 0 {
-		x.attr[h] = nil, false
+		delete(x.attr, h)
 	}
 }
 
@@ -144,7 +144,7 @@ func (t *attrSet) SetAttr(attr string, value interface{}) {
 	t.Lock()
 	defer t.Unlock()
 	if value == nil {
-		t.attr[attr] = nil, false
+		delete(t.attr, attr)
 	} else {
 		t.attr[attr] = value
 	}
@@ -153,7 +153,7 @@ func (t *attrSet) SetAttr(attr string, value interface{}) {
 func (t *attrSet) UnsetAttr(attr string) {
 	t.Lock()
 	defer t.Unlock()
-	t.attr[attr] = nil, false
+	delete(t.attr, attr)
 }
 
 func (t *attrSet) GetAttr(attr string) interface{} {
