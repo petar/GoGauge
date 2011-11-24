@@ -23,7 +23,7 @@ DIRS=\
 	pprof\
 	unclosed\
 	context\
-	gauge\
+	filter\
 
 TEST=\
 	$(filter-out $(NOTEST),$(DIRS))

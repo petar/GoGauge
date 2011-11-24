@@ -22,7 +22,16 @@ func uint64Bytes(s []byte) uint64 {
 	return x
 }
 
-func hashStringSlice(ss []string) int64 {
+// Filter keeps track of all literals, the current selection (a boolean predicate), and term attributes
+type Filter struct {
+	sync.Mutex
+	selected map[string]int
+	attr     map[int64]*attrSet
+	hlock    sync.Mutex
+	hash     hash.Hash
+}
+
+func (x *Filter) hashStringSlice(ss []string) int64 {
 	x.hlock.Lock()
 	defer x.hlock.Unlock()
 	x.hash.Reset()
@@ -34,16 +43,13 @@ func hashStringSlice(ss []string) int64 {
 	return int64(h)
 }
 
-// x keeps track of all literals, the current selection, and term attributes
-var x struct {
-	sync.Mutex
-	selected map[string]int
-	attr     map[int64]*attrSet
-	hlock    sync.Mutex
-	hash     hash.Hash
+func NewFilter() *Filter {
+	x := &Filter{}
+	x.init()
+	return x
 }
 
-func init() {
+func (x *Filter) init() {
 	x.selected = make(map[string]int)
 	x.attr = make(map[int64]*attrSet)
 	x.hash = fnv.New64a()
@@ -51,7 +57,7 @@ func init() {
 
 // Set the select status of a literal
 
-func Select(literals ...string) {
+func (x *Filter) Select(literals ...string) {
 	x.Lock()
 	defer x.Unlock()
 	for _, literal := range literals {
@@ -59,7 +65,7 @@ func Select(literals ...string) {
 	}
 }
 
-func Unselect(literals ...string) {
+func (x *Filter) Unselect(literals ...string) {
 	x.Lock()
 	defer x.Unlock()
 	for _, literal := range literals {
@@ -67,7 +73,7 @@ func Unselect(literals ...string) {
 	}
 }
 
-func Selected(literals ...string) bool {
+func (x *Filter) Selected(literals ...string) bool {
 	x.Lock()
 	defer x.Unlock()
 	for _, literal := range literals {
@@ -80,13 +86,13 @@ func Selected(literals ...string) bool {
 }
 
 // XXX: varargs for term
-func SetAttr(term []string, attr string, value interface{}) {
+func (x *Filter) SetAttr(term []string, attr string, value interface{}) {
 	if value == nil {
-		UnsetAttr(term, attr)
+		x.UnsetAttr(term, attr)
 	}
 	x.Lock()
 	defer x.Unlock()
-	h := hashStringSlice(term)
+	h := x.hashStringSlice(term)
 	a, ok := x.attr[h]
 	if !ok {
 		a = newAttrSet()
@@ -96,10 +102,10 @@ func SetAttr(term []string, attr string, value interface{}) {
 }
 
 // XXX: varargs for term
-func UnsetAttr(term []string, attr string) {
+func (x *Filter) UnsetAttr(term []string, attr string) {
 	x.Lock()
 	defer x.Unlock()
-	h := hashStringSlice(term)
+	h := x.hashStringSlice(term)
 	a, ok := x.attr[h]
 	if !ok {
 		return
@@ -111,10 +117,10 @@ func UnsetAttr(term []string, attr string) {
 }
 
 // XXX: varargs for term
-func GetAttr(term []string, attr string) interface{} {
+func (x *Filter) GetAttr(term []string, attr string) interface{} {
 	x.Lock()
 	defer x.Unlock()
-	h := hashStringSlice(term)
+	h := x.hashStringSlice(term)
 	a, ok := x.attr[h]
 	if !ok {
 		return nil
