@@ -25,11 +25,11 @@ func StartHTTP(bind string) {
 }
 
 func StartLogging(filename string, interval int64) {
-	t := time.LocalTime()
-	filename = filename + "-" + strconv.Itoa64(t.Year) + strconv.Itoa(t.Month) + strconv.Itoa(t.Day)
+	t := time.Now()
+	filename = filename + "-" + strconv.Itoa(t.Year()) + t.Month().String() + strconv.Itoa(t.Day())
 	go func() {
 		for k := 0; ; k++ {
-			time.Sleep(interval)
+			time.Sleep(time.Duration(interval))
 			var w bytes.Buffer
 			err := pprof.WriteHeapProfile(&w)
 			if err != nil {
