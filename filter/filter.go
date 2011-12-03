@@ -28,7 +28,7 @@ type Filter struct {
 	selected map[string]int
 	attr     map[int64]*attrSet
 	hlock    sync.Mutex
-	hash     hash.Hash
+	hash     hash.Hash64
 }
 
 func (x *Filter) hashStringSlice(ss []string) int64 {
@@ -38,7 +38,7 @@ func (x *Filter) hashStringSlice(ss []string) int64 {
 	var h uint64
 	for _, s := range ss {
 		x.hash.Write([]byte(s))
-		h ^= uint64Bytes(x.hash.Sum())
+		h ^= /*uint64Bytes(*/x.hash.Sum64()/*)*/
 	}
 	return int64(h)
 }
