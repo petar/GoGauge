@@ -7,10 +7,10 @@ package mem
 import (
 	"bytes"
 	"fmt"
-	"runtime"
 )
 
 func MemStatsString() string {
 	var w bytes.Buffer
 	fmt.Fprintf(&w, "")
+	return string(w.Bytes())
 }
