@@ -22,7 +22,9 @@ func uint64Bytes(s []byte) uint64 {
 	return x
 }
 
-// Filter keeps track of all literals, the current selection (a boolean predicate), and term attributes
+// Filter keeps track of a collection of string literals and the status of each of them,
+// which can be either 'selected' or 'not selected'. It provides routines for evaluating the
+// truthfulness of boolean predicates over these literals.
 type Filter struct {
 	sync.Mutex
 	selected map[string]int
@@ -55,8 +57,7 @@ func (x *Filter) init() {
 	x.hash = fnv.New64a()
 }
 
-// Set the select status of a literal
-
+// Select sets the status of the given literals to 'selected'
 func (x *Filter) Select(literals ...string) {
 	x.Lock()
 	defer x.Unlock()
@@ -65,6 +66,7 @@ func (x *Filter) Select(literals ...string) {
 	}
 }
 
+// Unselect sets the status of the given literals to 'unselected'
 func (x *Filter) Unselect(literals ...string) {
 	x.Lock()
 	defer x.Unlock()
@@ -73,7 +75,8 @@ func (x *Filter) Unselect(literals ...string) {
 	}
 }
 
-func (x *Filter) Selected(literals ...string) bool {
+// Selected returns true if all of the given literals have status 'selected'
+func (x *Filter) AreSelected(literals ...string) bool {
 	x.Lock()
 	defer x.Unlock()
 	for _, literal := range literals {
